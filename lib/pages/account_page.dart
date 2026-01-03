@@ -8,6 +8,7 @@ import '../models/loan_relations.dart';
 import '../models/paginated_books.dart';
 import 'login_page.dart';
 import '../register_page.dart';
+import 'edit_profile_page.dart';
 
 class AccountPage extends StatefulWidget {
   final UserProfile? user;
@@ -264,13 +265,18 @@ class _AccountPageState extends State<AccountPage> {
 
   Widget _buildProfileHeader() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A3BA9), Color(0xFF4F70FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: const Color(0xFF1A3BA9).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -279,53 +285,148 @@ class _AccountPageState extends State<AccountPage> {
       child: Column(
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1A3BA9), Color(0xFF4F70FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 2,
               ),
-              borderRadius: BorderRadius.circular(20),
             ),
-            child: const Center(
-              child: Icon(Icons.person_rounded, color: Colors.white, size: 40),
+            child: const Icon(
+              Icons.person_rounded,
+              color: Colors.white,
+              size: 50,
             ),
           ),
           const SizedBox(height: 20),
           Text(
             widget.user!.name,
             style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             widget.user!.email,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF64748B),
-              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.9),
+              fontWeight: FontWeight.w400,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A3BA9).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Text(
-              widget.user!.role == 'administrator' ? 'Admin' : 'User',
+              widget.user!.role == 'administrator' ? 'Administrator' : 'User',
               style: const TextStyle(
                 fontSize: 12,
-                color: Color(0xFF1A3BA9),
+                color: Colors.white,
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Additional Info
+          if (widget.user!.phone_number != null || widget.user!.address != null)
+            Column(
+              children: [
+                if (widget.user!.phone_number != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.phone,
+                        size: 16,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.user!.phone_number!,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (widget.user!.address != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.user!.address!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ),
+
+          // Edit Profile Button
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditProfilePage(
+                      user: widget.user!,
+                      apiClient: widget.apiClient,
+                      token: widget.token!,
+                      onProfileUpdated: widget.onProfileUpdated,
+                    ),
+                  ),
+                );
+                if (result == true) {
+                  _refresh();
+                }
+              },
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('Edit Profil'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF1A3BA9),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -507,36 +608,6 @@ class _AccountPageState extends State<AccountPage> {
         SizedBox(
           width: double.infinity,
           height: 52,
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => LoginPage(
-                    apiClient: widget.apiClient,
-                    onLoggedIn: widget.onLoggedIn,
-                    onProfileUpdated: widget.onProfileUpdated,
-                    onLogout: widget.onLogout,
-                  ),
-                ),
-              );
-              if (mounted) _refresh();
-            },
-            icon: const Icon(Icons.edit_rounded),
-            label: const Text('Edit Profil'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF1A3BA9),
-              side: const BorderSide(color: Color(0xFF1A3BA9)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
           child: ElevatedButton.icon(
             onPressed: () async {
               final confirmed = await _showLogoutConfirmationDialog();
@@ -580,39 +651,30 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 12),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              color: color,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(
+              fontSize: 12,
+              color: color.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -627,33 +689,11 @@ class _ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor;
-    String statusText;
-    Color backgroundColor;
-
-    switch (loan.status) {
-      case LoanStatus.active:
-        statusColor = const Color(0xFF16A34A);
-        statusText = 'Aktif';
-        backgroundColor = const Color(0xFFD1FAE5);
-        break;
-      case LoanStatus.late:
-        statusColor = const Color(0xFFEF4444);
-        statusText = 'Terlambat';
-        backgroundColor = const Color(0xFFFEE2E2);
-        break;
-      case LoanStatus.returned:
-        statusColor = const Color(0xFF1A3BA9);
-        statusText = 'Dikembalikan';
-        backgroundColor = const Color(0xFFE8EDFB);
-        break;
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -662,17 +702,10 @@ class _ActivityTile extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EDFB),
-              borderRadius: BorderRadius.circular(12),
+              color: _getStatusColor().withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            alignment: Alignment.center,
-            child: Text(
-              loan.title.isNotEmpty ? loan.title[0].toUpperCase() : '?',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A3BA9),
-              ),
-            ),
+            child: Icon(_getStatusIcon(), color: _getStatusColor(), size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -682,36 +715,68 @@ class _ActivityTile extends StatelessWidget {
                 Text(
                   loan.title,
                   style: const TextStyle(
-                    fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
-                  loan.startDate,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  '${loan.startDate} - ${loan.dueDate}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(999),
+              color: _getStatusColor().withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              statusText,
+              _getStatusText(),
               style: TextStyle(
-                color: statusColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontSize: 10,
+                color: _getStatusColor(),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Color _getStatusColor() {
+    switch (loan.status) {
+      case LoanStatus.active:
+        return const Color(0xFF1A3BA9);
+      case LoanStatus.late:
+        return const Color(0xFFEF4444);
+      case LoanStatus.returned:
+        return const Color(0xFF16A34A);
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (loan.status) {
+      case LoanStatus.active:
+        return Icons.menu_book;
+      case LoanStatus.late:
+        return Icons.error_outline;
+      case LoanStatus.returned:
+        return Icons.check_circle_outline;
+    }
+  }
+
+  String _getStatusText() {
+    switch (loan.status) {
+      case LoanStatus.active:
+        return 'Aktif';
+      case LoanStatus.late:
+        return 'Terlambat';
+      case LoanStatus.returned:
+        return 'Dikembalikan';
+    }
   }
 }
